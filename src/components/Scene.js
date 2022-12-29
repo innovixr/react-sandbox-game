@@ -1,9 +1,12 @@
-import { Physics } from "@react-three/rapier";
-import { MyMap } from './MyMap.js';
+import { RigidBody } from "@react-three/rapier";
+import { useEffect, useRef, forwardRef, useMemo } from 'react';
+import { Debug, Physics } from "@react-three/rapier";
+import { SphereGeometry } from "three";
+import { Model as MyMap } from './MyMap.jsx';
 
 export default function Scene() {
   
-  const usePhysic = false;
+  const usePhysic = true;
 
   return (
     <>
@@ -27,10 +30,17 @@ export default function Scene() {
       usePhysic ? 
         
         <Physics>
-          <MyMap position={[0, -3, 0]}/>
+          <Debug/>
+          <MyMap position={[0, 0, 0]}/>
+          <RigidBody colliders="ball" restitution={0.8} friction={0.7}>
+            <mesh position={[10.5, 10, 10]}>
+              <sphereGeometry/>
+              <meshStandardMaterial color={0xFF0000}/>
+            </mesh>
+          </RigidBody>
         </Physics> : 
         
-        <MyMap position={[0, -3, 0]}/>
+        <MyMap position={[0, 0, 0]}/>
       }
     </>
   )

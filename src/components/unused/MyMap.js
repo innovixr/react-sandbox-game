@@ -10,7 +10,7 @@ import React, { useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 
 export function MyMap(props) {
-  const { nodes, materials } = useGLTF("/gltf/scene01.gltf");
+  const { nodes, materials } = useGLTF("/gltf/scene01-transformed.glb");
   return (
     <group {...props} dispose={null}>
       <group name="Scene">
