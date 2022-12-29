@@ -14,7 +14,7 @@ export function MyMap(props) {
   return (
     <group {...props} dispose={null}>
       <group name="Scene">
-      <RigidBody type="fixed" restitution={0.5} friction={0.7}>
+        {/* <RigidBody type="fixed" restitution={0.5} friction={0.7}> */}
         <mesh
           name="Terrain"
           castShadow
@@ -24,7 +24,7 @@ export function MyMap(props) {
           position={[-1.05, 0, 0]}
           scale={57.47}
         />
-            </RigidBody>
+        {/*  </RigidBody> */}
         <mesh
           name="Container"
           castShadow
