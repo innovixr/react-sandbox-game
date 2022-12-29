@@ -18,7 +18,9 @@ export function MyMap(props) {
         
         Enabling RigidBody trigger this error:
         
-        Uncaught TypeError: Cannot destructure property 'world' of 'useRapier(...)' as it is undefined.
+        Uncaught TypeError: Cannot destructure property 'world' of 
+            'useRapier(...)' as it is undefined.
+            
         at useRigidBody (bundle.js:17929:5)
         at bundle.js:18631:45
         at renderWithHooks (bundle.js:59869:22)
