@@ -19,7 +19,7 @@
     "typescript":">=3.2.1 <4.0.0 || >=4.0.0 <5.0.0"
   },
   "scripts": {
-    "dev": "BROWSER=none HTTPS=true react-scripts start",
+    "dev": "BROWSER=none react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
