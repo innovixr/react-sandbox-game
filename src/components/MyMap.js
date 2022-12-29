@@ -14,6 +14,23 @@ export function MyMap(props) {
   return (
     <group {...props} dispose={null}>
       <group name="Scene">
+        {/*
+        
+        Enabling RigidBody trigger this error:
+        
+        Uncaught TypeError: Cannot destructure property 'world' of 'useRapier(...)' as it is undefined.
+        at useRigidBody (bundle.js:17929:5)
+        at bundle.js:18631:45
+        at renderWithHooks (bundle.js:59869:22)
+        at updateForwardRef (bundle.js:63430:24)
+        at beginWork (bundle.js:65490:20)
+        at HTMLUnknownElement.callCallback (bundle.js:65761:18)
+        at Object.invokeGuardedCallbackDev (bundle.js:65805:20)
+        at invokeGuardedCallback (bundle.js:65859:35)
+        at beginWork$1 (bundle.js:70284:11)
+        at performUnitOfWork (bundle.js:69570:16)
+        */}
+
         {/* <RigidBody type="fixed" restitution={0.5} friction={0.7}> */}
         <mesh
           name="Terrain"
