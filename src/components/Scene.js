@@ -1,23 +1,52 @@
 import { RigidBody } from "@react-three/rapier";
-import { useEffect, useRef, useState, useMemo, Object } from 'react';
+import { useEffect, useRef/*, useState*/ } from 'react';
 import { Debug, Physics } from "@react-three/rapier";
 import { Map } from './Map.js';
-import { useFrame, useThree } from '@react-three/fiber';
+import { extend, useFrame, useThree } from '@react-three/fiber';
+import { Player } from "./Player";
+import { Skybox } from "./Skybox";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
+import { Crosshair } from "./Crosshair.js";
+import { Mirror } from "./Mirror.js";
+import { PerspectiveCamera } from '@react-three/drei'
+
+extend({ PointerLockControls });
 
 const rr = 1;
 const rf = 1;
-const MAX_SPHERE = 20;
+//const MAX_SPHERE = 20;
 
+/*
 function randomIntFromInterval(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
+*/
 
-export default function Scene() {
+export default function Scene({ clicked }) {
 
-  let timeCount = 0;
-  const [spheres, setSpheres] = useState([]);
+  const { camera, gl } = useThree();
+
+  useEffect(() => {
+    camera.layers.enable(0);
+    camera.layers.enable(1);
+  }, [camera]);
+
+  useEffect(() => {
+    const handleFocus = () => controls.current.lock();
+    document.addEventListener("click", handleFocus);
+    return () => {
+      document.removeEventListener("click", handleFocus);
+    };
+  }, [gl]);
+
+
+  //let timeCount = 0;
+  //const [spheres, setSpheres] = useState([]);
+
+  const controls = useRef();
 
   useFrame((state, delta) => {
+    /*
     timeCount+=delta;
     if (timeCount>1 && spheres.length < MAX_SPHERE) {
       timeCount = 0;
@@ -32,26 +61,32 @@ export default function Scene() {
         </RigidBody>
       ])
     }
+    */
   })
 
   return (
     <>
       <directionalLight
-          intensity={1}
-          castShadow={true}
-          shadow-bias={-0.00015}
-          shadow-radius={4}
-          shadow-blur={10}
-          shadow-mapSize={[2048, 2048]}
-          position={[85.0, 80.0, 70.0]}
-          shadow-camera-left={-30}
-          shadow-camera-right={30}
-          shadow-camera-top={30}
-          shadow-camera-bottom={-30}
-        />
+        intensity={1}
+        castShadow={true}
+        shadow-bias={-0.00015}
+        shadow-radius={4}
+        shadow-blur={10}
+        shadow-mapSize={[2048, 2048]}
+        position={[85.0, 80.0, 70.0]}
+        shadow-camera-left={-30}
+        shadow-camera-right={30}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
+      />
 
       <ambientLight color={ 0x909090 } intensity={1} />
-
+      <Skybox/>
+      <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>
+      <PerspectiveCamera makeDefault position={[0, 0, 0]}>
+        <Crosshair position={[0,0,-1]}/>
+      </PerspectiveCamera>
+      <Mirror position={[0, 1, 5.2]}/>
       <Physics timeStep="vary">
         <Debug/>
         <Map position={[0, 0, 0]}/>
@@ -85,7 +120,8 @@ export default function Scene() {
             <meshStandardMaterial color={0x00FF00}/>
           </mesh>
         </RigidBody>
-        { [...spheres] }
+        <Player />
+        { /* [...spheres] */ }
       </Physics>
     </>
   )

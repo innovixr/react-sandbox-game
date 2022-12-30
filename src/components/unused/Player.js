@@ -1,128 +1,155 @@
-import { useState, useEffect, useRef } from 'react';
-import { useKeyboardControls, useAnimations, useGLTF } from "@react-three/drei";
-import { useFrame } from '@react-three/fiber';
-import { useRapier, RigidBody } from "@react-three/rapier";
-import * as THREE from 'three';
-import AnimationsHandler from './Animations.js';
+import { useRef, useEffect, useMemo } from 'react'
+import { Capsule } from 'three/examples/jsm/math/Capsule.js'
+import { Vector3 } from 'three'
+import { useFrame, useThree } from '@react-three/fiber'
+import useKeyboard from './useKeyboard.js'
+//import CapsuleCollider from './CapsuleCollider'
 
-//import { SphereGeometry } from 'three';
+const GRAVITY = 30
+const STEPS_PER_FRAME = 5
 
-// take a look at this
-// https://gltf.pmnd.rs/
-
-function shadowRecursive(el) {
-    if (el.isMesh) {
-      el.castShadow = true;
-    }
-    if (el.children) {
-      el.children.forEach(shadowRecursive);
-    }
-}
-
-export default function Player() {
-  const model = useGLTF('/gltf/bot45.gltf');
-  model.scene.children.forEach(shadowRecursive);
-
-  const animations = useAnimations(model.animations, model.scene);
-  const [ subscribeKeys, getKeys ] = useKeyboardControls();
-
-  const body = useRef();
-  const [ smoothedCameraPosition ] = useState(() => new THREE.Vector3());
-  const [ smoothedCameraTarget ] = useState(() => new THREE.Vector3());
-  const direction = new THREE.Vector3()
-  const frontVector = new THREE.Vector3();
-  const sideVector = new THREE.Vector3();
-  const cameraPosition = new THREE.Vector3();
-  const cameraTarget = new THREE.Vector3();
-
-  function updateCamera(state) {
-
-    cameraPosition.copy(body.current.translation());
-    cameraPosition.x+=1.5;
-    cameraPosition.y+=1.6;
-    //cameraPosition.z+=5.7;
-    
-    cameraTarget.copy(body.current.translation());
-    cameraTarget.y+=0.8;
-
-    //smoothedCameraPosition.lerp(cameraPosition, 0.1);
-    //smoothedCameraTarget.lerp(cameraTarget, 0.1);
-
-    state.camera.position.copy(cameraPosition);
-    state.camera.lookAt(cameraTarget);
-  }
+export default function Player({ octree, clicked, colliders, ballCount }) {
+  const playerOnFloor = useRef(false)
+  const playerVelocity = useMemo(() => new Vector3(), [])
+  const playerDirection = useMemo(() => new Vector3(), [])
+  const capsule = useMemo(
+    () => new Capsule(new Vector3(0, 10, 0), new Vector3(0, 11, 0), 0.5),
+    []
+  )
+  const { camera } = useThree()
 
   useEffect(() => {
-
-    const animHandler = new AnimationsHandler(animations.actions);
-
-    const unSubscribeForwardKey = subscribeKeys( s => s.forward, v => animHandler.moveForward(v) )
-    const unSubscribeBackwardKey = subscribeKeys( s => s.backward, v => animHandler.moveBackward(v) )
-    const unSubscribeLeftKey = subscribeKeys( s => s.left, v => animHandler.moveLeft(v) )
-    const unSubscribeRightKey = subscribeKeys( s => s.right, v => animHandler.moveRight(v) )
-    const unSubscribeShiftKey = subscribeKeys( s => s.running, v => animHandler.toggleFaster(v) )
-    const unSubscribeCtrlKey = subscribeKeys( s => s.crouch, v => animHandler.toggleCrouch(v) )
-    
-    return () => {
-      unSubscribeForwardKey();
-      unSubscribeBackwardKey();
-      unSubscribeLeftKey();
-      unSubscribeRightKey();
-      unSubscribeShiftKey();
-      unSubscribeCtrlKey();
-    }
-
-  }, [])
-
-  useFrame((state, delta) => {
-
-    const { forward, backward, left, right, running } = getKeys();
-
-    let speed = forward ? 1.8 : 1.2;
-    if (running) {
-      if (forward) {
-        speed = speed * 3;
-      } else {
-        speed = speed * 2.5;
-      }
-    }
-    frontVector.set(0, 0, - (backward - forward))
-    sideVector.set(-(left - right), 0, 0)
-    direction.subVectors(frontVector, sideVector).normalize().multiplyScalar(speed);//.applyEuler(state.camera.rotation)
-
-    const velocity = body.current.linvel()
-    body.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z })
-
-    updateCamera(state);
-
+    clicked &&
+      throwBall(camera, capsule, playerDirection, playerVelocity, clicked)
   })
 
+  const keyboard = useKeyboard()
 
-  const useBody = true;
-  return <>
-  <RigidBody
-      //position={[0, 1, 0]}
-      ref={body}
-      restitution={0.2}
-      friction={1}
-      //linearDamping={0.5}
-      //angularDamping={1}
-      // onCollisionEnter={() => console.log("player bang")}
-      // ccd={true}
-      canSleep={true}
-      //colliders={false}
-      //enabledRotations={[false, true, false]}
-      type="dynamic"
-    >
-      {
-        useBody 
-        ? <primitive object={model.scene} scale={1}/>
-        : <mesh scale={ 0.5 } position-y={ 1.5 } castShadow>
-            <sphereGeometry/>
-            <meshStandardMaterial color="orange"/>
-          </mesh>
+  function getForwardVector(camera, playerDirection) {
+    camera.getWorldDirection(playerDirection)
+    playerDirection.y = 0
+    playerDirection.normalize()
+    return playerDirection
+  }
+
+  function getSideVector(camera, playerDirection) {
+    camera.getWorldDirection(playerDirection)
+    playerDirection.y = 0
+    playerDirection.normalize()
+    playerDirection.cross(camera.up)
+    return playerDirection
+  }
+
+  function controls(
+    camera,
+    delta,
+    playerVelocity,
+    playerOnFloor,
+    playerDirection
+  ) {
+    const speedDelta = delta * (playerOnFloor ? 25 : 8)
+    keyboard['KeyA'] &&
+      playerVelocity.add(
+        getSideVector(camera, playerDirection).multiplyScalar(-speedDelta)
+      )
+    keyboard['KeyD'] &&
+      playerVelocity.add(
+        getSideVector(camera, playerDirection).multiplyScalar(speedDelta)
+      )
+    keyboard['KeyW'] &&
+      playerVelocity.add(
+        getForwardVector(camera, playerDirection).multiplyScalar(speedDelta)
+      )
+    keyboard['KeyS'] &&
+      playerVelocity.add(
+        getForwardVector(camera, playerDirection).multiplyScalar(-speedDelta)
+      )
+    if (playerOnFloor) {
+      if (keyboard['Space']) {
+        playerVelocity.y = 15
       }
-    </RigidBody>
-    
-  </>
+    }
+  }
+
+  function updatePlayer(
+    camera,
+    delta,
+    octree,
+    capsule,
+    playerVelocity,
+    playerOnFloor
+  ) {
+    let damping = Math.exp(-4 * delta) - 1
+    if (!playerOnFloor) {
+      playerVelocity.y -= GRAVITY * delta
+      damping *= 0.1 // small air resistance
+    }
+    playerVelocity.addScaledVector(playerVelocity, damping)
+    const deltaPosition = playerVelocity.clone().multiplyScalar(delta)
+    capsule.translate(deltaPosition)
+    playerOnFloor = playerCollisions(capsule, octree, playerVelocity)
+    camera.position.copy(capsule.end)
+    return playerOnFloor
+  }
+
+  function throwBall(camera, capsule, playerDirection, playerVelocity, count) {
+    const { sphere, velocity } = colliders[count % ballCount]
+
+    camera.getWorldDirection(playerDirection)
+
+    sphere.center
+      .copy(capsule.end)
+      .addScaledVector(playerDirection, capsule.radius * 1.5)
+
+    velocity.copy(playerDirection).multiplyScalar(50)
+    velocity.addScaledVector(playerVelocity, 2)
+  }
+
+  function playerCollisions(capsule, octree, playerVelocity) {
+    const result = octree.capsuleIntersect(capsule)
+    let playerOnFloor = false
+    if (result) {
+      playerOnFloor = result.normal.y > 0
+      if (!playerOnFloor) {
+        playerVelocity.addScaledVector(
+          result.normal,
+          -result.normal.dot(playerVelocity)
+        )
+      }
+      capsule.translate(result.normal.multiplyScalar(result.depth))
+    }
+    return playerOnFloor
+  }
+
+  function teleportPlayerIfOob(camera, capsule, playerVelocity) {
+    if (camera.position.y <= -100) {
+      playerVelocity.set(0, 0, 0)
+      capsule.start.set(0, 10, 0)
+      capsule.end.set(0, 11, 0)
+      camera.position.copy(capsule.end)
+      camera.rotation.set(0, 0, 0)
+    }
+  }
+
+  useFrame(({ camera }, delta) => {
+    controls(
+      camera,
+      delta,
+      playerVelocity,
+      playerOnFloor.current,
+      playerDirection
+    )
+    const deltaSteps = Math.min(0.05, delta) / STEPS_PER_FRAME
+    for (let i = 0; i < STEPS_PER_FRAME; i++) {
+      playerOnFloor.current = updatePlayer(
+        camera,
+        deltaSteps,
+        octree,
+        capsule,
+        playerVelocity,
+        playerOnFloor.current
+      )
+    }
+    teleportPlayerIfOob(camera, capsule, playerVelocity)
+  })
 }

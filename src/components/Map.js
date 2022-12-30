@@ -28,14 +28,19 @@ export function Map(props) {
     const node = gltf.nodes[nodeName];
     if (node.isMesh) {
 
-      if (node.scale && ( node.scale.x != 1 && node.scale.y != 1 && node.scale.y != 1)) {
+      if (node.scale && ( node.scale.x !== 1 && node.scale.y !== 1 && node.scale.y !== 1)) {
         console.warn(`Map.js: mesh ${nodeName} got a custom scale !`, node.scale);
+      }
+
+      let colliders = 'hull';
+      if (node.name.match(/maison/i)) {
+        colliders = 'trimesh';
       }
 
       node.rname = 'r'+node.name;
 
       map.push(
-        <RigidBody key={node.rname} type="fixed" colliders="hull" restitution={0.5} friction={0.7} >
+        <RigidBody key={node.rname} type="fixed" colliders={colliders} restitution={0.5} friction={0.7} >
           <mesh 
             key={node.name} geometry={node.geometry} 
             material={materials[node.material.uuid]}

@@ -7,11 +7,13 @@
     "@react-three/gltfjsx": "4.3.4",
     "@react-three/rapier": "0.11",
     "@react-three/xr": "^5.1.2",
+    "babel-plugin-glsl": "1.0.0",
     "r3f-perf": "6.6.3",
     "react": "18",
     "react-dom": "18.2.0",
     "react-scripts": "5.0.1",
-    "three": "0.148.0"
+    "three": "0.148.0",
+    "three-quaternion-from-normal": "1.0.0"
   },
   "peerDependencies": {
     "@babel/plugin-syntax-flow": "^7.14.5",
