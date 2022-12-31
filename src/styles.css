@@ -28,3 +28,10 @@ body {
   overflow: hidden;
   background-color: black;
 }
+
+#root button {
+  right:auto !important;
+  left:20px !important;
+  width:150px;
+  transform:inherit !important;
+}
