@@ -7,6 +7,8 @@ import { useKeyboardInput } from "./hooks/useKeyboardInput";
 import { useVariable } from "./hooks/useVariable";
 //import { Bullet } from "./Bullet";
 import { Raycaster } from "three";
+import { PerspectiveCamera } from '@react-three/drei';
+import { Crosshair } from "./Crosshair.js";
 
 /** Player movement constants */
 //const speed = 300;
@@ -167,65 +169,38 @@ export const Player = ( {position=[0, 0.1, 10] }) => {
       y: velocity.y,
       z: direction.z
     });
+    
+    // jump
+    const ray = rapierWorld.castRay(new rapier.Ray(rigidBodyRef.current.translation(), { x: 0, y: -1, z: 0 }))
+    const grounded = ray && ray.collider && Math.abs(ray.toi) <= playerHeight-0.01;
+    if (Space && grounded) rigidBodyRef.current.setLinvel({ x: 0, y: 3, z: 0 })
 
-    /*
-    const world = rapier.world.raw()
-    const ray = world.castRay(new RAPIER.Ray(ref.current.translation(), { x: 0, y: -1, z: 0 }))
-    const grounded = ray && ray.collider && Math.abs(ray.toi) <= 1.75
-    if (jump && grounded) ref.current.setLinvel({ x: 0, y: 7.5, z: 0 })
-    */
-
-    // Handles jumping
-    if (playerState.current.jumping && velocity.y < 0) {
-      /** Ground check */
-      const origin = rigidBodyRef.current.translation();
-      // the ray cast must not conflict with the player, 
-      // it should start BELOW him
-      origin.y-=0.31;
-      const direction = { x:0, y:-1, z:0 };
-      const ray = new rapier.Ray(origin, direction);
-      const hit = rapierWorld.castRay(ray, 0.2, true);
-
-      if (hit && hit.toi < 0.15) {
-        playerState.current.jumping = false;
-        console.log('stop jumped', hit.toi);
-      }
-    }
-
-    if (Space && !playerState.current.jumping) {
-      const now = Date.now();
-      if (now > playerState.current.timeTojump) {
-        playerState.current.timeTojump = now + jumpCoolDown;
-        playerState.current.jumping = true;
-        /*
-        rigidBodyRef.current.setLinvel(
-          playerState.current.vel[0],
-          0.1,
-          playerState.current.vel[2]
-          );
-          */
-        rigidBodyRef.current.applyImpulse({x:0, y:4, z:0});
-      }
-    }
-
+    // place camera
     playerRef.current.getWorldPosition(playerPosition);
     playerPosition.y+=(playerHeight/2)-0.1;
     camera.position.copy(playerPosition);
   });
 
   return (
-    <>
+    <object3D position={position}>
       <RigidBody 
         ref = { rigidBodyRef }
         enabledRotations={[false, false, false]}
         colliders="hull"
         friction={0}
       >
-        <mesh ref={ playerRef } position={position}>
+
+        <PerspectiveCamera makeDefault position={[0, 0, 0]}>
+          <Crosshair position={[0,0,-0.1]}/>
+        </PerspectiveCamera>
+
+        <mesh ref={ playerRef }>
           <capsuleGeometry args={[0.5, 1.75/2]}/>
           <meshStandardMaterial color={0xFF0000} transparent="true" opacity="0.5"/>
         </mesh>
+
       </RigidBody>
+
       {/** Renders bullets 
       {bullets.map((bullet) => {
         return (
@@ -237,6 +212,6 @@ export const Player = ( {position=[0, 0.1, 10] }) => {
         );
       })}
       */}
-    </>
+    </object3D>
   );
 };

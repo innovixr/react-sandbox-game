@@ -6,9 +6,7 @@ import { extend, useFrame, useThree } from '@react-three/fiber';
 import { Player } from "./Player";
 import { Skybox } from "./Skybox";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
-import { Crosshair } from "./Crosshair.js";
 import { Mirror } from "./Mirror.js";
-import { PerspectiveCamera } from '@react-three/drei';
 import { folder, useControls } from 'leva';
 import { useKeyboardInput } from "./hooks/useKeyboardInput";
 import { useVariable } from "./hooks/useVariable";
@@ -119,12 +117,7 @@ export default function Scene({ clicked }) {
   return (
     <>
       <Skybox/>
-      <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>
-
-      <PerspectiveCamera makeDefault position={[0, 0, 0]}>
-        <Crosshair position={[0,0,-0.1]}/>
-      </PerspectiveCamera>
-      
+      <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>      
       <Mirror position={[0, 1, 5.2]}/>
       <Physics timeStep="vary">
         { levaControls.debugPhysics && <Debug/> }
