@@ -1663,6 +1663,9 @@
             ]
         },
         {
+            "extras" : {
+                "rigidbody" : "trimesh"
+            },
             "name" : "Plane.012",
             "primitives" : [
                 {
@@ -1677,6 +1680,9 @@
             ]
         },
         {
+            "extras" : {
+                "rigidbody" : "trimesh"
+            },
             "name" : "Plane",
             "primitives" : [
                 {
