@@ -4,6 +4,8 @@ import "./styles.css";
 import { Perf } from 'r3f-perf';
 import { folder, useControls } from 'leva';
 import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
+import { useMemo } from 'react';
+import { KeyboardControls } from '@react-three/drei';
 
 export default function App() {
 
@@ -24,8 +26,17 @@ export default function App() {
     })
   });
 
+  const keyboardMap = useMemo(() => [
+    { name:'forward', keys:['KeyW'] },
+    { name:'backward', keys:['KeyS'] },
+    { name:'leftward', keys:['KeyA'] },
+    { name:'rightward', keys:['KeyD'] },
+    { name:'jump', keys:['Space'] },
+    { name:'addABallon', keys:['KeyB'] },
+  ], []);
+
   return (
-    <>
+    <KeyboardControls map={keyboardMap}>
       <Canvas dpr={[1, 2]} shadows camera={{ fov: 45, position: [0, 10, 40] }}>
         {
           lc.perfMonitor && 
@@ -68,6 +79,6 @@ export default function App() {
         </XR>
       </Canvas>
       <VRButton />
-    </>
+    </KeyboardControls>
   );
 }

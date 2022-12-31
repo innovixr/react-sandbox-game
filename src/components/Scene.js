@@ -1,5 +1,5 @@
 import { RigidBody } from "@react-three/rapier";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Debug, Physics } from "@react-three/rapier";
 import { Map } from './Map.js';
 import { extend, useFrame, useThree } from '@react-three/fiber';
@@ -8,10 +8,8 @@ import { Skybox } from "./Skybox";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { Mirror } from "./Mirror.js";
 import { folder, useControls } from 'leva';
-import { useKeyboardInput } from "./hooks/useKeyboardInput";
-import { useVariable } from "./hooks/useVariable";
 import * as THREE from 'three';
-
+import { useKeyboardControls } from '@react-three/drei';
 //import { softShadows } from "@react-three/drei";
 
 extend({ PointerLockControls });
@@ -38,8 +36,8 @@ function randomIntFromInterval(min, max) { // min and max included
 export default function Scene({ clicked }) {
 
   const { camera, gl } = useThree();
-  const pressed = useKeyboardInput(["KeyB"]);
-  const input = useVariable(pressed);
+
+  const [ subscribedKeys, getKeys ] = useKeyboardControls();
 
   const levaControls = useControls({
     'Debug':folder({
@@ -66,17 +64,17 @@ export default function Scene({ clicked }) {
   const [spheres, setSpheres] = useState([]);
 
   const controls = useRef();
-
+  
   useFrame((state, delta) => {
+    const { addABallon } = getKeys()
 
-    const { KeyB } = input.current;
-    const nis = lastInsertedSphere + (1*500);
-    const canInsertSphere = Date.now() > nis;
-
-    if (KeyB && canInsertSphere) {
-      const kname='rs'+spheres.length;
-      let color = new THREE.Color( 0xffffff );
-      color.setHex( Math.random() * 0xffffff );
+    if (addABallon) {
+      const nis = lastInsertedSphere + (1*500);
+      const canInsertSphere = Date.now() > nis;
+      if (canInsertSphere) {
+        const kname='rs'+spheres.length;
+        let color = new THREE.Color( 0xffffff );
+        color.setHex( Math.random() * 0xffffff );
         setSpheres([
           ...spheres,
           <RigidBody key={kname} colliders="ball" restitution={rr} friction={rf}>
@@ -88,8 +86,9 @@ export default function Scene({ clicked }) {
               <meshStandardMaterial color={color}/>
             </mesh>
           </RigidBody>
-        ])
-      lastInsertedSphere = Date.now();
+        ]);
+        lastInsertedSphere = Date.now();
+      }
     }
 
 
@@ -118,11 +117,11 @@ export default function Scene({ clicked }) {
     <>
       <Skybox/>
       <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>      
-      <Mirror position={[0, 1, 5.2]}/>
+      <Mirror position={[0, 1.01, 5.2]}/>
       <Physics timeStep="vary">
         { levaControls.debugPhysics && <Debug/> }
         <Map position={[0, 0, 0]}/>
-        <Player />
+        <Player mass="10"/>
         { [...spheres] }
       </Physics>
     </>
