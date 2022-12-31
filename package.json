@@ -15,6 +15,7 @@
     "react-scripts": "5.0.1",
     "three": "0.148.0",
     "three-quaternion-from-normal": "1.0.0"
+    
   },
   "peerDependencies": {
     "@babel/plugin-syntax-flow": "^7.14.5",
