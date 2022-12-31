@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="10mm" height="10mm" version="1.1" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+ <g>
+  <path d="m4.603 0.5297v3.235h0.7943v-3.235h-0.7943zm0.215 0.263h0.3643v2.709h-0.3643v-2.709z"/>
+  <path d="m4.603 6.235v3.235h0.7943v-3.235h-0.7943zm0.215 0.2625h0.3643v2.709h-0.3643v-2.709z"/>
+  <path transform="rotate(90)" d="m4.603-6.235h0.7943v-3.235h-0.7943v3.235zm0.215-0.2625v-2.709h0.3643v2.709h-0.3643z"/>
+  <path transform="rotate(90)" d="m4.603-0.5297h0.7943v-3.235h-0.7943v3.235zm0.215-0.263v-2.709h0.3643v2.709h-0.3643z"/>
+ </g>
+</svg>
