@@ -32,22 +32,21 @@ export function Map(props) {
         console.warn(`Map.js: mesh ${nodeName} got a custom scale !`, node.scale);
       }
 
-      let colliders = 'hull';
-      if (node.name.match(/maison/i)) {
-        colliders = 'trimesh';
-      }
+      let colliders = node.userData.rigidbody || 'hull';
 
       node.rname = 'r'+node.name;
 
       map.push(
         <RigidBody key={node.rname} type="fixed" colliders={colliders} restitution={0.5} friction={0.7} >
           <mesh 
+            name={node.name}
             key={node.name} geometry={node.geometry} 
             material={materials[node.material.uuid]}
             position={node.position} 
             rotation={node.rotation}
             scale={node.scale}
             castShadow
+            receiveShadow
           />
         </RigidBody>
       );
