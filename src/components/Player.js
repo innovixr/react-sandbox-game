@@ -1,24 +1,29 @@
 //import { useSphere } from "@react-three/cannon";
-import { RigidBody } from "@react-three/rapier";
+import { useRapier, RigidBody } from "@react-three/rapier";
 import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { useKeyboardInput } from "./hooks/useKeyboardInput";
 import { useVariable } from "./hooks/useVariable";
 //import { Bullet } from "./Bullet";
-//import { Raycaster } from "three";
+import { Raycaster } from "three";
 
 /** Player movement constants */
 //const speed = 300;
 //const bulletSpeed = 30;
 //const bulletCoolDown = 300;
-//const jumpSpeed = 5;
-//const jumpCoolDown = 400;
+const jumpSpeed = 5;  
+const jumpCoolDown = 400;
 const SPEED = 5;
+const playerHeight = 1.75;
 
-export const Player = ( {position=[0, 1.6, 10] }) => {
+export const Player = ( {position=[0, 0.1, 10] }) => {
+//export const Player = ( {position=[0, 8.5, 0] }) => {
+
   const rigidBodyRef = useRef();
   const playerRef = useRef();
+  const { rapier, world } = useRapier();
+  const rapierWorld = world.raw();
 
   /** Bullets */
   //const [bullets, setBullets] = useState([]);
@@ -35,6 +40,14 @@ export const Player = ( {position=[0, 1.6, 10] }) => {
   const sideVector = useMemo(() => new Vector3(), []);
   const direction = useMemo(() => new Vector3(), []);
   const playerPosition = useMemo(() => new Vector3(), []);
+
+  /** Player state */
+  const playerState = useRef({
+    timeToShoot: 0,
+    timeTojump: 0,
+    vel: [0, 0, 0],
+    jumping: false
+  });
 
   /** Player loop
   useFrame((_, delta) => {
@@ -126,13 +139,13 @@ export const Player = ( {position=[0, 1.6, 10] }) => {
   useFrame((state, delta) => {
     //  access current player state
     const velocity = rigidBodyRef.current.linvel();
-    //const pos = rigidBodyRef.current.translation();
+    // const pos = rigidBodyRef.current.translation();
     // const rot = rigidBodyApi.current.rotation();
 
     // movement
     let [horizontal, vertical] = [0, 0];
 
-    const { KeyW, KeyS, KeyA, KeyD } = input.current;
+    const { KeyW, KeyS, KeyA, KeyD, Space } = input.current;
     if (KeyW) vertical -= 1;
     if (KeyS) vertical += 1;
     if (KeyD) horizontal -= 1;
@@ -146,17 +159,58 @@ export const Player = ( {position=[0, 1.6, 10] }) => {
       .multiplyScalar(SPEED)
       // apply player rotation (works when rotating player, not when rotating your head)
       .applyEuler(playerRef.current.rotation)
-    // apply camera rotation ()
+      // apply camera rotation ()
       .applyEuler(camera.rotation);
+
     rigidBodyRef.current.setLinvel({
       x: direction.x,
       y: velocity.y,
       z: direction.z
     });
 
+    /*
+    const world = rapier.world.raw()
+    const ray = world.castRay(new RAPIER.Ray(ref.current.translation(), { x: 0, y: -1, z: 0 }))
+    const grounded = ray && ray.collider && Math.abs(ray.toi) <= 1.75
+    if (jump && grounded) ref.current.setLinvel({ x: 0, y: 7.5, z: 0 })
+    */
+
+    // Handles jumping
+    if (playerState.current.jumping && velocity.y < 0) {
+      /** Ground check */
+      const origin = rigidBodyRef.current.translation();
+      // the ray cast must not conflict with the player, 
+      // it should start BELOW him
+      origin.y-=0.31;
+      const direction = { x:0, y:-1, z:0 };
+      const ray = new rapier.Ray(origin, direction);
+      const hit = rapierWorld.castRay(ray, 0.2, true);
+
+      if (hit && hit.toi < 0.15) {
+        playerState.current.jumping = false;
+        console.log('stop jumped', hit.toi);
+      }
+    }
+
+    if (Space && !playerState.current.jumping) {
+      const now = Date.now();
+      if (now > playerState.current.timeTojump) {
+        playerState.current.timeTojump = now + jumpCoolDown;
+        playerState.current.jumping = true;
+        /*
+        rigidBodyRef.current.setLinvel(
+          playerState.current.vel[0],
+          0.1,
+          playerState.current.vel[2]
+          );
+          */
+        rigidBodyRef.current.applyImpulse({x:0, y:4, z:0});
+      }
+    }
+
     playerRef.current.getWorldPosition(playerPosition);
+    playerPosition.y+=(playerHeight/2)-0.1;
     camera.position.copy(playerPosition);
-    //if (jump) onJump();
   });
 
   return (
