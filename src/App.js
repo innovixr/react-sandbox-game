@@ -1,26 +1,48 @@
-import { Canvas } from "@react-three/fiber";
-import Scene from "./components/Scene";
-import "./styles.css";
+import { useMemo } from 'react';
 import { Perf } from 'r3f-perf';
 import { folder, useControls } from 'leva';
+import { Canvas } from "@react-three/fiber";
 import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
-import { useMemo } from 'react';
-import { KeyboardControls } from '@react-three/drei';
+import { KeyboardControls, Environment, PerformanceMonitor } from '@react-three/drei';
+
+import Scene from "./components/Scene";
+import "./styles.css";
 
 export default function App() {
 
   const lc = useControls({
     'Debug':folder({
-      perfMonitor:false
+      perfMonitor:true
+    }),
+    'Environment':folder({
+      'Background':folder({
+        preset:{
+          value:'city',
+          options:[
+            'sunset',
+            'dawn',
+            'night',
+            'warehouse',
+            'forest',
+            'apartment',
+            'studio',
+            'city',
+            'lobby'
+          ]
+        }
+      }),
     }),
     'Lights':folder({
       'Directional':folder({
         dirEnable:true,
-        dirIntensity:{ value: 0.5, min: 0, max: 30, step: 0.1 },
-        dirRadius:{ value: 4, min: 0, max:100, step:0.01}
+        dirIntensity:{ value: 0.1, min: 0, max: 30, step: 0.1 },
+      }),
+      'Point':folder({
+        ptEnable:false,
+        ptIntensity:{ value: 4.5, min: 0, max: 30, step: 0.1 },
       }),
       'Ambiant':folder({
-        ambEnable:true,
+        ambEnable:false,
         ambIntensity:{ value: 3, min: 0, max: 30, step: 0.1 },
       })
     })
@@ -43,15 +65,6 @@ export default function App() {
             <Perf position="top-left" />
         }
         {
-          /*
-          <XR>
-            <Controllers />
-            <Hands />
-            <Scene />
-          </XR>
-          */
-        }
-        {
           lc.dirEnable && 
             <directionalLight
               intensity={lc.dirIntensity}
@@ -67,16 +80,41 @@ export default function App() {
               shadow-camera-bottom={-30}
             />
         }
-
+        {
+          lc.ptEnable && 
+            <pointLight
+              intensity={lc.ptIntensity}
+              castShadow={true}
+              shadow-bias={-0.001}
+              shadow-mapSize={[4096, 4096]}
+              position={[45.0, 40.0, 35.0]}
+              distance={150}
+            />
+        }
         {
           lc.ambEnable &&
             <ambientLight color={ 0x909090 } intensity={lc.ambIntensity} />
         }
         <XR>
-          <Controllers />
+          <Controllers
+            rayMaterial={{ color: 'blue' }}
+            hideRaysOnBlur={false}
+          />
           <Hands />
           <Scene />
         </XR>
+        <Environment
+          preset={lc.preset}
+          background
+          blur={0}
+          intensity={0.1}
+          ground={{
+            height: 10,
+            radius: 115,
+            scale: 100
+          }}
+        />
+        { /* <ContactShadows scale={20} position={[1, 1, 1]} opacity={2} /> */ }
       </Canvas>
       <VRButton />
     </KeyboardControls>

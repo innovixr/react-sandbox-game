@@ -37,7 +37,19 @@ export function Map(props) {
       node.rname = 'r'+node.name;
 
       map.push(
-        <RigidBody key={node.rname} type="fixed" colliders={colliders} restitution={0.5} friction={0.7} >
+        <RigidBody
+          key={node.rname}
+          type="fixed"
+          colliders={colliders}
+          restitution={0.5}
+          friction={0.7}
+          canSleep={true}
+          //onCollisionEnter={e => console.log('onCollisionEnter',e.colliderObject, node.name)}
+          //onCollisionExit={e => console.log('onCollisionExit',e.colliderObject, node.name)}
+          //onIntersectionEnter={e => console.log('onIntersectionEnter',e.colliderObject, node.name)}
+          //onIntersectionExit={e => console.log('onIntersectionExit',e.colliderObject, node.name)}
+          //onContactForce={e => console.log('onContactForce',e.colliderObject, node.name)}
+        >
           <mesh 
             name={node.name}
             key={node.name} geometry={node.geometry} 

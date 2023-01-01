@@ -5,6 +5,7 @@ import { Vector3 } from "three";
 import { PerspectiveCamera, useKeyboardControls } from '@react-three/drei';
 import { Crosshair } from "./Crosshair.js";
 import { useMouseInput } from "./hooks/useMouseInput.js";
+import { Movement } from './xr/Movement';
 
 //import { Bullet } from "./Bullet";
 
@@ -19,12 +20,13 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
   // References
   const rigidBodyRef = useRef();
   const playerRef = useRef();
+  const cameraRef = useRef();
 
   // Bullets
   //const [bullets, setBullets] = useState([]);
 
   // Camera
-  const { camera } = useThree();
+  const { invalidate, camera } = useThree();
 
   // Player movement constants
   const frontVector = useMemo(() => new Vector3(), []);
@@ -38,6 +40,11 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
 
   // Keyboard
   const [ subscribedKeys, getKeys ] = useKeyboardControls();
+
+  useEffect(() => {
+    cameraRef.current.addEventListener('change', invalidate)
+    return () => cameraRef.current.removeEventListener('change', invalidate)
+  }, [])
 
   useEffect(() => {
     const unsubscribeJump = subscribedKeys(
@@ -88,24 +95,27 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
     }
     */
 
+  let velocity;
+
   useFrame((state, delta) => {
-    const velocity = rigidBodyRef.current.linvel();
+    
+    velocity = rigidBodyRef.current.linvel();
     // const pos = rigidBodyRef.current.translation();
     // const rot = rigidBodyApi.current.rotation();
 
     frontVector.set(0, 0, 0);
     sideVector.set(0, 0, 0);
-    const { forward, backward, leftward, rightward } = getKeys()
-    if (forward) frontVector.z-= 1;
-    if (backward) frontVector.z+= 1;
-    if (rightward) sideVector.x-= 1;
-    if (leftward) sideVector.x+= 1;
+
+    if (getKeys().forward) frontVector.z-= 1;
+    if (getKeys().backward) frontVector.z+= 1;
+    if (getKeys().rightward) sideVector.x-= 1;
+    if (getKeys().leftward) sideVector.x+= 1;
    
     direction
       .subVectors(frontVector, sideVector)
       .normalize()
       .multiplyScalar(SPEED)
-      .applyEuler(playerRef.current.rotation)
+      //.applyEuler(playerRef.current.rotation)
       .applyEuler(camera.rotation);
 
     // move player
@@ -126,7 +136,7 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
     <>
       <RigidBody ref={ rigidBodyRef } mass={mass} colliders="hull" enabledRotations={[false, false, false]} friction={0} position={position}>
 
-        <PerspectiveCamera makeDefault position={[0, 0, 0]}>
+        <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 0]}>
           <Crosshair position={[0,0,-0.1]}/>
         </PerspectiveCamera>
 
@@ -136,7 +146,7 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
         </mesh>
 
       </RigidBody>
-
+      <Movement/>
       {/** Renders bullets 
       {bullets.map((bullet) => {
         return (

@@ -1,15 +1,16 @@
-import { RigidBody } from "@react-three/rapier";
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Debug, Physics } from "@react-three/rapier";
-import { Map } from './Map.js';
+import { Debug, Physics, RigidBody } from "@react-three/rapier";
 import { extend, useFrame, useThree } from '@react-three/fiber';
+import { useKeyboardControls, ContactShadows } from '@react-three/drei';
+import { folder, useControls } from 'leva';
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
+import { Map } from './Map.js';
 import { Player } from "./Player";
 import { Skybox } from "./Skybox";
-import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { Mirror } from "./Mirror.js";
-import { folder, useControls } from 'leva';
+
 import * as THREE from 'three';
-import { useKeyboardControls } from '@react-three/drei';
+
 //import { softShadows } from "@react-three/drei";
 
 extend({ PointerLockControls });
@@ -65,6 +66,12 @@ export default function Scene({ clicked }) {
 
   const controls = useRef();
   
+  const lc = useControls({
+    'Debug':folder({
+      mirrorEnable:false
+    })
+  });
+
   useFrame((state, delta) => {
     const { addABallon } = getKeys()
 
@@ -115,9 +122,12 @@ export default function Scene({ clicked }) {
 
   return (
     <>
-      <Skybox/>
+      { /* <Skybox/> */ }
       <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>      
-      <Mirror position={[0, 1.01, 5.2]}/>
+      {
+        lc.mirrorEnable && 
+          <Mirror position={[0, 1.01, 5.2]}/> 
+      }
       <Physics timeStep="vary">
         { levaControls.debugPhysics && <Debug/> }
         <Map position={[0, 0, 0]}/>
