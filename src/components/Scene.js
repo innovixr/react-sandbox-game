@@ -122,7 +122,7 @@ export default function Scene({ clicked }) {
         <Player mass="10"/>
         { [...spheres] }
       </Physics>
-      <axesHelper position={[0,0,10]}/>
+      { /* <axesHelper position={[0,0,10]}/> */ }
     </>
   )
 }

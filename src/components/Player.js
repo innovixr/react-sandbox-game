@@ -136,8 +136,6 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
     
   });
   
-  
-
   const onXRStart = () => {
     XRInProgress = true;
     //cameraRef.current.lookAt(0,0,0);
@@ -174,11 +172,11 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
 
           <mesh castShadow name="playerRef" ref={ playerMeshRef }>
             <capsuleGeometry args={[0.2, PLAYER_HEIGHT*0.8, 1, 4]}/>
-            <meshStandardMaterial wireframe={true}/>
+            <meshStandardMaterial wireframe={false}/>
           </mesh>
 
           <PerspectiveCamera ref={cameraRef} makeDefault position={[0, PLAYER_HEIGHT/2-0.1, 0]}>
-              <Crosshair position={[0,0,-0.1]}/>
+              { !XRInProgress && <Crosshair position={[0,0,-0.1]}/> }
           </PerspectiveCamera>
 
           <Controllers rayMaterial={{ color: 'blue' }} hideRaysOnBlur={false}/>

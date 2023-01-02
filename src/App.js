@@ -14,6 +14,7 @@ export default function App() {
     'Debug':folder({
       perfMonitor:true
     }),
+    /*
     'Environment':folder({
       'Background':folder({
         preset:{
@@ -32,6 +33,7 @@ export default function App() {
         }
       }),
     }),
+    */
     'Lights':folder({
       'Directional':folder({
         dirEnable:true,
@@ -97,14 +99,15 @@ export default function App() {
         }
         <Scene />
         <Environment
-          preset={lc.preset}
+          //preset={lc.preset}
           background
+          files="/textures/hdri/port.hdr"
           blur={0}
-          intensity={0.1}
+          intensity={0.01}
           ground={{
-            height: 10,
-            radius: 115,
-            scale: 100
+            height: 2,
+            radius: 80,
+            scale: 1500
           }}
         />
         { /* <ContactShadows scale={20} position={[1, 1, 1]} opacity={2} /> */ }
