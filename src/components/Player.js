@@ -60,18 +60,22 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
   }, [])
 
   const jump = () => {
-    const velocity = rigidBodyRef.current.linvel();
+    const trans = rigidBodyRef.current.translation();
+    trans.y-=PLAYER_HEIGHT/2+0.1;
 
     const ray = rapierWorld.castRay(
-      new rapier.Ray(rigidBodyRef.current.translation(),
-      { x: 0, y: -1, z: 0 }
-    ));
+      new rapier.Ray(trans, { x: 0, y: -1, z: 0 }),
+      10,
+      true
+    );
 
-    const grounded = ray && ray.collider && Math.abs(ray.toi) <= PLAYER_HEIGHT-0.01;
-    if (grounded) 
+    const grounded = ray && ray.collider && Math.abs(ray.toi) <= 0.15
+    if (grounded) {
+      const velocity = rigidBodyRef.current.linvel();
       rigidBodyRef
         .current
         .setLinvel({ x: velocity.x, y: 3, z: velocity.z })
+    }
   }
   /*
 
