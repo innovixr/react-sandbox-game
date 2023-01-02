@@ -8,8 +8,6 @@ export const Mirror = ({position}) => {
       <mesh>
         <planeGeometry args={[2, 2]}/>
         <MeshReflectorMaterial
-          transparent="true"
-          opacity={0.7}
           //blur={[0, 0]} // Blur ground reflections (width, heigt), 0 skips blur
           //mixBlur={0} // How much blur mixes with surface roughness (default = 1)
           //mixStrength={1} // Strength of the reflections

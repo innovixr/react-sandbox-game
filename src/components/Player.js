@@ -1,38 +1,40 @@
 import { useRapier, RigidBody } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { Vector3 } from "three";
-import { PerspectiveCamera, useKeyboardControls } from '@react-three/drei';
+import { extend, useFrame, useThree } from "@react-three/fiber";
+import { DoubleSide, CameraHelper, Vector3, Quaternion, BoxGeometry } from "three";
+import { PerspectiveCamera, useKeyboardControls, useHelper } from '@react-three/drei';
 import { Crosshair } from "./Crosshair.js";
 import { useMouseInput } from "./hooks/useMouseInput.js";
 import { Movement } from './xr/Movement';
+import { XR, useController, Controllers, Hands } from "@react-three/xr";
+import { SPEED, PLAYER_HEIGHT } from './Constant';
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
+extend({ PointerLockControls });
 
 //import { Bullet } from "./Bullet";
 
-const SPEED = 5;
-const playerHeight = 1.75;
-
-const mirrorPosition = [0, 0.01, 10];
+const mirrorPosition = [0, PLAYER_HEIGHT/2, 8];
 const roofPosition = [0, 8.5, 0];
 
 export const Player = ( {position=mirrorPosition, mass=70}) => {
 
   // References
   const rigidBodyRef = useRef();
-  const playerRef = useRef();
+  const playerMeshRef = useRef();
   const cameraRef = useRef();
+  //useHelper(cameraRef, CameraHelper);
 
   // Bullets
   //const [bullets, setBullets] = useState([]);
 
   // Camera
-  const { invalidate, camera } = useThree();
+  const { invalidate, gl, camera } = useThree();
 
   // Player movement constants
   const frontVector = useMemo(() => new Vector3(), []);
   const sideVector = useMemo(() => new Vector3(), []);
   const direction = useMemo(() => new Vector3(), []);
-  const playerPosition = useMemo(() => new Vector3(), []);
+  let XRInProgress = false;
 
   // Physics
   const { rapier, world } = useRapier();
@@ -65,7 +67,7 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
       { x: 0, y: -1, z: 0 }
     ));
 
-    const grounded = ray && ray.collider && Math.abs(ray.toi) <= playerHeight-0.01;
+    const grounded = ray && ray.collider && Math.abs(ray.toi) <= PLAYER_HEIGHT-0.01;
     if (grounded) 
       rigidBodyRef
         .current
@@ -97,8 +99,14 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
 
   let velocity;
 
+  //const leftController = useController('left');
+  //const rightController = useController('right');
+  //const gazeController = useController('none');
+
   useFrame((state, delta) => {
     
+    if (XRInProgress) return;
+
     velocity = rigidBodyRef.current.linvel();
     // const pos = rigidBodyRef.current.translation();
     // const rot = rigidBodyApi.current.rotation();
@@ -123,30 +131,66 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
       .current
       .setLinvel({ x: direction.x, y: velocity.y, z: direction.z });
 
-    // move camera
-    playerRef
-      .current
-      .getWorldPosition(playerPosition);
-    playerPosition.y+=(playerHeight/2)-0.1;
-    camera.position.copy(playerPosition);
-
+    // this required camera to have rotation order set to YXZ
+    playerMeshRef.current.rotation.y = camera.rotation.y
+    
   });
+  
+  
+
+  const onXRStart = () => {
+    XRInProgress = true;
+    //cameraRef.current.lookAt(0,0,0);
+    //cameraRef.position.y=0;
+  }
+
+  const pointerlockRef = useRef();
+
+  useEffect(() => {
+    // important !
+    cameraRef.current.rotation.order="YXZ";
+    const handleFocus = (e) => {
+      pointerlockRef.current.lock();
+    }
+    gl.domElement.addEventListener("click", handleFocus);
+    return () => {
+      gl.domElement.removeEventListener("click", handleFocus);
+    };
+  }, []);
 
   return (
     <>
-      <RigidBody ref={ rigidBodyRef } mass={mass} colliders="hull" enabledRotations={[false, false, false]} friction={0} position={position}>
+      <pointerLockControls ref={pointerlockRef} args={[camera, gl.domElement ]}/>
+      <RigidBody 
+        name="rigidBody" 
+        ref={ rigidBodyRef } 
+        position={position} 
+        mass={mass} 
+        colliders="hull" 
+        enabledRotations={[false, false, false]}
+        friction={0}
+      >
+        <XR onSessionStart={ onXRStart } >
 
-        <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 0, 0]}>
-          <Crosshair position={[0,0,-0.1]}/>
-        </PerspectiveCamera>
+          <mesh castShadow name="playerRef" ref={ playerMeshRef }>
+            <capsuleGeometry args={[0.2, PLAYER_HEIGHT*0.8, 1, 4]}/>
+            <meshStandardMaterial wireframe={true}/>
+          </mesh>
 
-        <mesh ref={ playerRef }>
-          <capsuleGeometry args={[0.5, 1.75/2]}/>
-          <meshStandardMaterial color={0xFF0000} transparent="true" opacity="0.5"/>
-        </mesh>
+          <PerspectiveCamera ref={cameraRef} makeDefault position={[0, PLAYER_HEIGHT/2-0.1, 0]}>
+              <Crosshair position={[0,0,-0.1]}/>
+          </PerspectiveCamera>
+
+          <Controllers rayMaterial={{ color: 'blue' }} hideRaysOnBlur={false}/>
+          <Hands />
+          <Movement
+            rigidBodyRef={rigidBodyRef}
+            playerMeshRef={playerMeshRef}
+          />
+        </XR>
 
       </RigidBody>
-      <Movement/>
+
       {/** Renders bullets 
       {bullets.map((bullet) => {
         return (

@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { Perf } from 'r3f-perf';
 import { folder, useControls } from 'leva';
 import { Canvas } from "@react-three/fiber";
-import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
 import { KeyboardControls, Environment, PerformanceMonitor } from '@react-three/drei';
+import { VRButton } from "@react-three/xr";
 
 import Scene from "./components/Scene";
 import "./styles.css";
@@ -95,14 +95,7 @@ export default function App() {
           lc.ambEnable &&
             <ambientLight color={ 0x909090 } intensity={lc.ambIntensity} />
         }
-        <XR>
-          <Controllers
-            rayMaterial={{ color: 'blue' }}
-            hideRaysOnBlur={false}
-          />
-          <Hands />
-          <Scene />
-        </XR>
+        <Scene />
         <Environment
           preset={lc.preset}
           background

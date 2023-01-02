@@ -11,6 +11,7 @@ export function Map(props) {
   const materials = {};
   for (const materialName in gltf.materials) {
     const material = gltf.materials[materialName];
+    //material.wireframe = true;
     if (materials[material.uuid]) {
       console.warn(`Map.js: ${materialName} is using an id already defined`);
     }

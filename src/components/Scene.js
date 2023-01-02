@@ -3,17 +3,15 @@ import { Debug, Physics, RigidBody } from "@react-three/rapier";
 import { extend, useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls, ContactShadows } from '@react-three/drei';
 import { folder, useControls } from 'leva';
-import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { Map } from './Map.js';
 import { Player } from "./Player";
 import { Skybox } from "./Skybox";
 import { Mirror } from "./Mirror.js";
+import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
 
 import * as THREE from 'three';
 
 //import { softShadows } from "@react-three/drei";
-
-extend({ PointerLockControls });
 
 /*
 softShadows({
@@ -52,19 +50,9 @@ export default function Scene({ clicked }) {
     camera.layers.enable(1);
   }, [camera]);
 
-  useEffect(() => {
-    const handleFocus = () => controls.current.lock();
-    document.addEventListener("click", handleFocus);
-    return () => {
-      document.removeEventListener("click", handleFocus);
-    };
-  }, [gl]);
-
-
   let timeCount = 0;
   const [spheres, setSpheres] = useState([]);
 
-  const controls = useRef();
   
   const lc = useControls({
     'Debug':folder({
@@ -120,10 +108,10 @@ export default function Scene({ clicked }) {
     }
   })
 
+
   return (
     <>
       { /* <Skybox/> */ }
-      <pointerLockControls ref={controls} args={[camera, gl.domElement]}/>      
       {
         lc.mirrorEnable && 
           <Mirror position={[0, 1.01, 5.2]}/> 
@@ -134,6 +122,7 @@ export default function Scene({ clicked }) {
         <Player mass="10"/>
         { [...spheres] }
       </Physics>
+      <axesHelper position={[0,0,10]}/>
     </>
   )
 }
