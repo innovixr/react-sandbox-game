@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Perf } from 'r3f-perf';
 import { folder, useControls } from 'leva';
 import { Canvas } from "@react-three/fiber";
-import { KeyboardControls, Environment, PerformanceMonitor } from '@react-three/drei';
+import { KeyboardControls, Environment, BakeShadows, ContactShadows, Shadow, Stage } from '@react-three/drei';
 import { VRButton } from "@react-three/xr";
 
 import Scene from "./components/Scene";
@@ -37,14 +37,14 @@ export default function App() {
     'Lights':folder({
       'Directional':folder({
         dirEnable:true,
-        dirIntensity:{ value: 0.1, min: 0, max: 30, step: 0.1 },
+        dirIntensity:{ value: 0.5, min: 0, max: 30, step: 0.1 },
       }),
       'Point':folder({
         ptEnable:false,
         ptIntensity:{ value: 4.5, min: 0, max: 30, step: 0.1 },
       }),
       'Ambiant':folder({
-        ambEnable:false,
+        ambEnable:true,
         ambIntensity:{ value: 3, min: 0, max: 30, step: 0.1 },
       })
     })
@@ -58,6 +58,8 @@ export default function App() {
     { name:'jump', keys:['Space'] },
     { name:'addABallon', keys:['KeyB'] },
   ], []);
+  
+  const x = 80;
 
   return (
     <KeyboardControls map={keyboardMap}>
@@ -71,15 +73,15 @@ export default function App() {
             <directionalLight
               intensity={lc.dirIntensity}
               castShadow={true}
-              shadow-bias={-0.00015}
-              shadow-radius={4}
-              shadow-blur={10}
+              shadow-bias={-0.001}
+              shadow-radius={0}
+              shadow-blur={1}
               shadow-mapSize={[2048, 2048]}
               position={[85.0, 80.0, 70.0]}
-              shadow-camera-left={-30}
-              shadow-camera-right={30}
-              shadow-camera-top={30}
-              shadow-camera-bottom={-30}
+              shadow-camera-left={-x}
+              shadow-camera-right={x}
+              shadow-camera-top={x}
+              shadow-camera-bottom={-x}
             />
         }
         {
@@ -97,7 +99,35 @@ export default function App() {
           lc.ambEnable &&
             <ambientLight color={ 0x909090 } intensity={lc.ambIntensity} />
         }
+        {
+          /*
+        <Stage 
+          adjustCamera={false} 
+          intensity={0.5} 
+          shadows="accumulative" 
+          environment={{
+            background:true,
+            files:"/textures/hdri/port.hdr",
+            blur:0,
+            intensity:0.01,
+            ground:{
+              height: 2,
+              radius: 80,
+              scale: 1500
+            }
+          }}
+          >
+          <Scene />
+          <BakeShadows/>
+        </Stage>
+        */}
         <Scene />
+          <BakeShadows/>
+        { /*
+          <ContactShadows renderOrder={2} color="black" resolution={2048} frames={1} scale={10} blur={1.5} opacity={0.65} far={0.5} />
+          */
+        } 
+        
         <Environment
           //preset={lc.preset}
           background

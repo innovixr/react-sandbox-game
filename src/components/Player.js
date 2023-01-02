@@ -8,6 +8,8 @@ import { useMouseInput } from "./hooks/useMouseInput.js";
 import { Movement } from './xr/Movement';
 import { XR, useController, Controllers, Hands } from "@react-three/xr";
 import { SPEED, PLAYER_HEIGHT } from './Constant';
+import { folder, useControls } from 'leva';
+import { Gun } from "./Gun.js";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 extend({ PointerLockControls });
 
@@ -24,6 +26,21 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
   const cameraRef = useRef();
   //useHelper(cameraRef, CameraHelper);
 
+  const lc = useControls({
+    'Player':folder({
+      jumpVelocity:{
+        value: 3,
+        min: 3,
+        max: 30,
+        step: 0.5,
+        onChange: (value, path, context) => {
+          jumpVelocity = value;
+        }
+      },
+    })
+  });
+
+  let jumpVelocity = 3;
   // Bullets
   //const [bullets, setBullets] = useState([]);
 
@@ -59,6 +76,10 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
     }
   }, [])
 
+  const getVelocity = () => {
+    return lc.jumpVelocity
+  }
+
   const jump = () => {
     const trans = rigidBodyRef.current.translation();
     trans.y-=PLAYER_HEIGHT/2+0.1;
@@ -72,48 +93,20 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
     const grounded = ray && ray.collider && Math.abs(ray.toi) <= 0.15
     if (grounded) {
       const velocity = rigidBodyRef.current.linvel();
+      console.log(lc.jumpVelocity);
       rigidBodyRef
         .current
-        .setLinvel({ x: velocity.x, y: 3, z: velocity.z })
+        .setLinvel({ x: velocity.x, y: jumpVelocity, z: velocity.z })
     }
   }
-  /*
-
-    // Handles shooting
-    const bulletDirection = cameraDirection.clone().multiplyScalar(bulletSpeed);
-    const bulletPosition = camera.position
-      .clone()
-      .add(cameraDirection.clone().multiplyScalar(2));
-
-    if (mouseInput.current.left) {
-      const now = Date.now();
-      if (now >= state.current.timeToShoot) {
-        state.current.timeToShoot = now + bulletCoolDown;
-        setBullets((bullets) => [
-          ...bullets,
-          {
-            id: now,
-            position: [bulletPosition.x, bulletPosition.y, bulletPosition.z],
-            forward: [bulletDirection.x, bulletDirection.y, bulletDirection.z]
-          }
-        ]);
-      }
-    }
-    */
-
+  
   let velocity;
-
-  //const leftController = useController('left');
-  //const rightController = useController('right');
-  //const gazeController = useController('none');
 
   useFrame((state, delta) => {
     
     if (XRInProgress) return;
 
     velocity = rigidBodyRef.current.linvel();
-    // const pos = rigidBodyRef.current.translation();
-    // const rot = rigidBodyApi.current.rotation();
 
     frontVector.set(0, 0, 0);
     sideVector.set(0, 0, 0);
@@ -137,13 +130,16 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
 
     // this required camera to have rotation order set to YXZ
     playerMeshRef.current.rotation.y = camera.rotation.y
+
+    //console.log(playerMeshRef.current.parent.children);
+    // this does not work
+    //playerMeshRef.current.position.copy(playerMeshRef.current.parent.children[4].position);
+
     
   });
   
   const onXRStart = () => {
     XRInProgress = true;
-    //cameraRef.current.lookAt(0,0,0);
-    //cameraRef.position.y=0;
   }
 
   const pointerlockRef = useRef();
@@ -174,13 +170,14 @@ export const Player = ( {position=mirrorPosition, mass=70}) => {
       >
         <XR onSessionStart={ onXRStart } >
 
-          <mesh castShadow name="playerRef" ref={ playerMeshRef }>
+          <mesh name="playerRef" ref={ playerMeshRef }>
             <capsuleGeometry args={[0.2, PLAYER_HEIGHT*0.8, 1, 4]}/>
             <meshStandardMaterial wireframe={false}/>
           </mesh>
 
           <PerspectiveCamera ref={cameraRef} makeDefault position={[0, PLAYER_HEIGHT/2-0.1, 0]}>
               { !XRInProgress && <Crosshair position={[0,0,-0.1]}/> }
+            <Gun/>
           </PerspectiveCamera>
 
           <Controllers rayMaterial={{ color: 'blue' }} hideRaysOnBlur={false}/>

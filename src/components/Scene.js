@@ -38,10 +38,11 @@ export default function Scene({ clicked }) {
 
   const [ subscribedKeys, getKeys ] = useKeyboardControls();
 
-  const levaControls = useControls({
+  const lc = useControls({
     'Debug':folder({
       debugPhysics:false,
-      addBallons:false
+      addBallons:false,
+      mirrorEnable:false
     })
   });
 
@@ -52,13 +53,6 @@ export default function Scene({ clicked }) {
 
   let timeCount = 0;
   const [spheres, setSpheres] = useState([]);
-
-  
-  const lc = useControls({
-    'Debug':folder({
-      mirrorEnable:false
-    })
-  });
 
   useFrame((state, delta) => {
     const { addABallon } = getKeys()
@@ -87,7 +81,7 @@ export default function Scene({ clicked }) {
     }
 
 
-    if (levaControls.addBallons) {
+    if (lc.addBallons) {
       timeCount+=delta;
       if (timeCount>2 && spheres.length < MAX_SPHERE) {
         timeCount = 0;
@@ -117,7 +111,7 @@ export default function Scene({ clicked }) {
           <Mirror position={[0, 1.01, 5.2]}/> 
       }
       <Physics timeStep="vary">
-        { levaControls.debugPhysics && <Debug/> }
+        { lc.debugPhysics && <Debug/> }
         <Map position={[0, 0, 0]}/>
         <Player mass="10"/>
         { [...spheres] }

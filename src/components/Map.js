@@ -1,6 +1,7 @@
 import { RigidBody } from "@react-three/rapier";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
 import { useLoader } from "@react-three/fiber";
+import { KeyboardControls, Environment, BakeShadows, ContactShadows, Shadow } from '@react-three/drei';
 
 export function Map(props) {
 
@@ -11,6 +12,16 @@ export function Map(props) {
   const materials = {};
   for (const materialName in gltf.materials) {
     const material = gltf.materials[materialName];
+    
+    //material.flatShading = true;
+    if (material.name && material.name.match(/Terrain|maison|mur|caisse|escalier/i)) {
+      material.metalness = 0.2;
+      material.roughness = 0.8;
+    }
+    if (material.name && material.name.match(/container/i)) {
+      material.metalness = 0.5;
+      material.roughness = 0.5;
+    }
     //material.wireframe = true;
     if (materials[material.uuid]) {
       console.warn(`Map.js: ${materialName} is using an id already defined`);
@@ -60,7 +71,9 @@ export function Map(props) {
             scale={node.scale}
             castShadow
             receiveShadow
-          />
+          >
+          { /* <Shadow rotation={[0, 0, 0]} scale={5} position={[0, -1, 0]} color="black" opacity={1} /> */ }
+          </mesh>
         </RigidBody>
       );
     }
